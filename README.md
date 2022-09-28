@@ -1,2 +1,2 @@
 # QuantSC-NLP-F22
-NLP Project on Financial Forecasting through unstructured news article data
+Financial Forecasting with NLP, unstructured news media data
