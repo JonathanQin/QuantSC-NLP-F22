@@ -9,7 +9,7 @@ class WaPoScraper():
     def __init__(self):
         self.driver = webdriver.Chrome() # add arg of path to chromedriver
         self.driver.get('https://www.washingtonpost.com/tech-policy/?itid=nb_technology_tech-policy');
-        # time.sleep(2) # Let the user actually see something!
+        time.sleep(2) # Let the user actually see something!
 
     # close the chrome instance
     def quit(self):
@@ -27,9 +27,24 @@ class WaPoScraper():
 
             print(headline, timestamp)
 
+    def loadArticles(self):
+        parent = self.driver.find_element(By.XPATH, '//*[@id="__next"]/div[3]/div/main/article')
+        while True:
+            try:
+                loadBtn = parent.find_element(By.TAG_NAME, 'button')
+                loadBtn.click()
+                time.sleep(5)
+            except Exception as e:
+                print(e)
+                break
+
+        print("loaded all articles")
+        time.sleep(2)
+
 def main():
     scraper = WaPoScraper()
     try:
+        scraper.loadArticles()
         scraper.getLinks()
         scraper.quit()
     except Exception as e:
