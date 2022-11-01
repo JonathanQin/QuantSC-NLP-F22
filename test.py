@@ -1,6 +1,7 @@
 import time
 import pandas as pd
 
+from datetime import datetime, timedelta
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 
@@ -11,7 +12,8 @@ class WaPoScraper():
         self.driver = webdriver.Chrome() # add arg of path to chromedriver
         self.driver.get('https://www.washingtonpost.com/tech-policy/?itid=nb_technology_tech-policy');
         self.output = None
-        time.sleep(2) # Let the user actually see something!
+        self.d = {}
+        time.sleep(5) # Let the user actually see something!
 
     # close the chrome instance
     def quit(self):
@@ -32,36 +34,43 @@ class WaPoScraper():
             headlines.append(h)
             timestamps.append(t)
 
-        print("successfully got all article headlines and timestamps")
+        print("_____")
+        print("exported", len(headlines), "headlines to csv @", datetime.now())
+        print("_____")
         self.export(headlines, timestamps)
 
     def export(self, headlines, timestamps):
         industry = ['Tech' for _ in range(len(headlines))]
 
-        d = {}
-        d['Headlines'] = headlines
-        d['Timestamps'] = timestamps
-        d['Industry'] = industry
+        self.d['Headlines'] = headlines
+        self.d['Timestamps'] = timestamps
+        self.d['Industry'] = industry
 
         df = pd.DataFrame(d)
         df.to_csv('wapo.csv')
         print("finished exporting dataset")
 
-    def getOutput(self):
-        return self.output
-
     # keep clicking the load more articles button
     def loadArticles(self):
         parent = self.driver.find_element(By.XPATH, '//*[@id="__next"]/div[3]/div/main/article')
-        for i in range(50):
-            print('clicking the load button...', i)
+
+        now = datetime.now()
+        future = now + timedelta(minutes = 10)
+        cnt = 0
+        while datetime.now() < future:
+            print('clicking the load button...', datetime.now())
             try:
                 loadBtn = parent.find_element(By.TAG_NAME, 'button')
                 loadBtn.click()
-                time.sleep(5)
+                time.sleep(3)
             except Exception as e:
                 print(e)
                 break
+            finally:
+                if cnt % 5 == 0:
+                    self.getLinks()
+
+                cnt += 1
 
         print("loaded all articles")
         time.sleep(2)
