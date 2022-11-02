@@ -12,7 +12,12 @@ class WaPoScraper():
         self.driver = webdriver.Chrome() # add arg of path to chromedriver
         self.driver.get('https://www.washingtonpost.com/tech-policy/?itid=nb_technology_tech-policy');
         self.output = None
-        self.d = {}
+        self.d = {
+            'Headlines' : [],
+            'Timestamps' : [],
+            'Industry' : []
+        }
+        self.seen = set()
         time.sleep(5) # Let the user actually see something!
 
     # close the chrome instance
@@ -28,27 +33,25 @@ class WaPoScraper():
         headlines = []
         timestamps = []
         for o in objs:
-            h = o.find_element(By.TAG_NAME, 'h3').text
-            t = o.find_elements(By.TAG_NAME, 'span')[-1].text
+            if o not in self.seen:
+                h = o.find_element(By.TAG_NAME, 'h3').text
+                t = o.find_elements(By.TAG_NAME, 'span')[-1].text
+                self.seen.add(o)
             
-            headlines.append(h)
-            timestamps.append(t)
+                headlines.append(h)
+                timestamps.append(t)
 
-        print("_____")
-        print("exported", len(headlines), "headlines to csv @", datetime.now())
-        print("_____")
         self.export(headlines, timestamps)
 
     def export(self, headlines, timestamps):
-        industry = ['Tech' for _ in range(len(headlines))]
+        for i in range(len(headlines)):
+            self.d['Headlines'].append(headlines[i])
+            self.d['Timestamps'].append(timestamps[i])
+            self.d['Industry'].append('Tech')
 
-        self.d['Headlines'] = headlines
-        self.d['Timestamps'] = timestamps
-        self.d['Industry'] = industry
-
-        df = pd.DataFrame(d)
+        df = pd.DataFrame(self.d)
         df.to_csv('wapo.csv')
-        print("finished exporting dataset")
+        print("finished exporting dataset of size", len(df.index))
 
     # keep clicking the load more articles button
     def loadArticles(self):
@@ -57,7 +60,7 @@ class WaPoScraper():
         now = datetime.now()
         future = now + timedelta(minutes = 10)
         cnt = 0
-        while datetime.now() < future:
+        while True:
             print('clicking the load button...', datetime.now())
             try:
                 loadBtn = parent.find_element(By.TAG_NAME, 'button')
@@ -67,7 +70,7 @@ class WaPoScraper():
                 print(e)
                 break
             finally:
-                if cnt % 5 == 0:
+                if cnt % 10 == 0:
                     self.getLinks()
 
                 cnt += 1
