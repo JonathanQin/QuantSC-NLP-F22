@@ -170,7 +170,7 @@ def scraper(start_date, end_date):
         start_date += delta
         
         
-for i in range(2021, 2013, -1):
+for i in range(2017, 2013, -1):
     scraper(date(i, 1, 1), date(i, 12, 31))
     writeCSV(wsjData, i)
     wsjData.clear()
